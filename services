@@ -1,1 +1,72 @@
+import { SystemData, User, Plan } from '../types';
 
+const STORAGE_KEY = 'vnpt_sales_data';
+
+export const dataService = {
+  // Khởi tạo dữ liệu ban đầu
+  init(): SystemData {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+    
+    const initialData: SystemData = {
+      users: [
+        {
+          id: '1',
+          employee_id: 'ADMIN001',
+          employee_name: 'Administrator',
+          position: 'Quản trị viên',
+          management_area: 'Trung tâm',
+          username: 'admin',
+          password: '123',
+          role: 'admin',
+          is_active: true,
+          created_at: new Date().toISOString()
+        }
+      ],
+      plans: []
+    };
+    this.saveData(initialData);
+    return initialData;
+  },
+
+  getData(): SystemData {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{"users":[],"plans":[]}');
+  },
+
+  saveData(data: SystemData) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  },
+
+  // Các hàm CRUD cho User và Plan (được gọi trong App.tsx)
+  createUser(user: Omit<User, 'id' | 'created_at'>) {
+    const data = this.getData();
+    const newUser = { ...user, id: crypto.randomUUID(), created_at: new Date().toISOString() };
+    data.users.push(newUser);
+    this.saveData(data);
+  },
+  
+  updateUser(user: User) {
+    const data = this.getData();
+    data.users = data.users.map(u => u.id === user.id ? user : u);
+    this.saveData(data);
+  },
+
+  deleteUser(id: string) {
+    const data = this.getData();
+    data.users = data.users.filter(u => u.id !== id);
+    this.saveData(data);
+  },
+
+  createPlan(plan: Omit<Plan, 'id' | 'created_at'>) {
+    const data = this.getData();
+    const newPlan = { ...plan, id: crypto.randomUUID(), created_at: new Date().toISOString() };
+    data.plans.push(newPlan as Plan);
+    this.saveData(data);
+  },
+
+  updatePlan(plan: Plan) {
+    const data = this.getData();
+    data.plans = data.plans.map(p => p.id === plan.id ? plan : p);
+    this.saveData(data);
+  }
+};
